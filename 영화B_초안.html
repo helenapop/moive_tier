@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>나만의 영화 티어리스트</title>
+  <style>
+    :root {
+      --bg: #111318;
+      --panel: #1a1f29;
+      --panel-2: #222836;
+      --text: #f3f4f6;
+      --muted: #aeb6c5;
+      --border: #313949;
+      --accent: #7c89ff;
+
+      --best: #e74c3c;
+      --good: #f1c40f;
+      --normal: #2ecc71;
+      --bad: #3498db;
+      --worst: #95a5a6;
+      --unrated: #6b7280;
+
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(124, 137, 255, 0.15), transparent 30%),
+        linear-gradient(180deg, #0d1015 0%, #111318 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 18px 50px;
+    }
+
+    .header {
+      margin-bottom: 24px;
+    }
+
+    .title {
+      font-size: clamp(28px, 5vw, 42px);
+      font-weight: 800;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .panel {
+      background: rgba(26, 31, 41, 0.92);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .controls {
+      padding: 18px;
+      margin-bottom: 22px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .movie-input {
+      flex: 1 1 260px;
+      min-width: 0;
+      background: #10151d;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 14px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .movie-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124, 137, 255, 0.18);
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.14s ease, opacity 0.14s ease, background 0.14s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.95;
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #2a3140;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger {
+      background: #5a2323;
+      color: #ffd5d5;
+      border: 1px solid #7c3232;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .tier-section {
+      overflow: hidden;
+      border-left: 6px solid transparent;
+    }
+
+    .tier-header {
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tier-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .tier-badge {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex: 0 0 14px;
+    }
+
+    .tier-title {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    .tier-count {
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .tier-body {
+      padding: 14px;
+      min-height: 90px;
+    }
+
+    .movie-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .movie-item {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .movie-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .movie-title-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      text-align: left;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px 4px;
+      border-radius: 8px;
+    }
+
+    .movie-title-btn:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .delete-btn {
+      background: transparent;
+      color: #ff9f9f;
+      border: 1px solid #6b3a3a;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.14s ease, transform 0.14s ease;
+      flex-shrink: 0;
+    }
+
+    .delete-btn:hover {
+      background: rgba(255, 80, 80, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .rating-actions {
+      display: none;
+      margin-top: 12px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .movie-item.open .rating-actions {
+      display: flex;
+    }
+
+    .tier-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      color: #111;
+      transition: transform 0.12s ease, filter 0.12s ease;
+    }
+
+    .tier-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.03);
+    }
+
+    .tier-best { background: var(--best); color: #fff; }
+    .tier-good { background: var(--good); color: #111; }
+    .tier-normal { background: var(--normal); color: #08140d; }
+    .tier-bad { background: var(--bad); color: #fff; }
+    .tier-worst { background: var(--worst); color: #111; }
+    .tier-unrated { background: var(--unrated); color: #fff; }
+
+    .empty {
+      color: var(--muted);
+      font-size: 14px;
+      padding: 8px 4px;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .best-border { border-left-color: var(--best); }
+    .good-border { border-left-color: var(--good); }
+    .normal-border { border-left-color: var(--normal); }
+    .bad-border { border-left-color: var(--bad); }
+    .worst-border { border-left-color: var(--worst); }
+    .unrated-border { border-left-color: var(--unrated); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(20, 24, 31, 0.96);
+      color: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 14px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">🎬 나만의 영화 티어리스트</h1>
+      <p class="subtitle">
+        본 영화를 추가하고, 제목을 클릭해 <strong>최고 / 좋음 / 보통 / 별로 / 최악</strong> 등급으로 정리해 보세요.
+        브라우저를 껐다 켜도 기록이 유지됩니다.
+      </p>
+    </header>
+
+    <section class="panel controls">
+      <div class="input-row">
+        <input
+          id="movieInput"
+          class="movie-input"
+          type="text"
+          placeholder="영화 제목을 입력하세요"
+          maxlength="60"
+        />
+        <button id="addBtn" class="btn btn-primary">추가</button>
+        <button id="copyBtn" class="btn btn-secondary">결과 복사</button>
+        <button id="resetBtn" class="btn btn-danger">전체 초기화</button>
+      </div>
+      <div class="hint">
+        · 영화 제목을 클릭하면 등급 선택 버튼이 열립니다.<br />
+        · 삭제 버튼으로 개별 삭제할 수 있습니다.
+      </div>
+    </section>
+
+    <main class="grid" id="tierGrid">
+      <section class="panel tier-section unrated-border">
+        <div class="tier-header">
+          <div class="tier-title-wrap">
+            <span class="tier-badge" style="background: var(--unrated);"></span>
+            <h2 class="tier-title">미분류</h2>
+          </div>
+          <div class="tier-count" id="count-unrated">0편</div>
+        </div>
+        <div class="tier-body">
+          <div class="movie-list" id="list-unrated"></div>
+        </div>
+      </section>
+
+      <section class="panel tier-section best-border">
+        <div class="tier-header">
+          <div class="tier-title-wrap">
+            <span class="tier-badge" style="background: var(--best);"></span>
+            <h2 class="tier-title">최고</h2>
+          </div>
+          <div class="tier-count" id="count-best">0편</div>
+        </div>
+        <div class="tier-body">
+          <div class="movie-list" id="list-best"></div>
+        </div>
+      </section>
+
+      <section class="panel tier-section good-border">
+        <div class="tier-header">
+          <div class="tier-title-wrap">
+            <span class="tier-badge" style="background: var(--good);"></span>
+            <h2 class="tier-title">좋음</h2>
+          </div>
+          <div class="tier-count" id="count-good">0편</div>
+        </div>
+        <div class="tier-body">
+          <div class="movie-list" id="list-good"></div>
+        </div>
+      </section>
+
+      <section class="panel tier-section normal-border">
+        <div class="tier-header">
+          <div class="tier-title-wrap">
+            <span class="tier-badge" style="background: var(--normal);"></span>
+            <h2 class="tier-title">보통</h2>
+          </div>
+          <div class="tier-count" id="count-normal">0편</div>
+        </div>
+        <div class="tier-body">
+          <div class="movie-list" id="list-normal"></div>
+        </div>
+      </section>
+
+      <section class="panel tier-section bad-border">
+        <div class="tier-header">
+          <div class="tier-title-wrap">
+            <span class="tier-badge" style="background: var(--bad);"></span>
+            <h2 class="tier-title">별로</h2>
+          </div>
+          <div class="tier-count" id="count-bad">0편</div>
+        </div>
+        <div class="tier-body">
+          <div class="movie-list" id="list-bad"></div>
+        </div>
+      </section>
+
+      <section class="panel tier-section worst-border">
+        <div class="tier-header">
+          <div class="tier-title-wrap">
+            <span class="tier-badge" style="background: var(--worst);"></span>
+            <h2 class="tier-title">최악</h2>
+          </div>
+          <div class="tier-count" id="count-worst">0편</div>
+        </div>
+        <div class="tier-body">
+          <div class="movie-list" id="list-worst"></div>
+        </div>
+      </section>
+    </main>
+
+    <p class="footer-note">
+      결과 복사는 텍스트 형태로 복사되어 카카오톡, 메모장 등에 바로 붙여넣을 수 있습니다.
+    </p>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script>
+    const STORAGE_KEY = "movie-tierlist-data-v1";
+
+    const tierInfo = {
+      unrated: { label: "미분류" },
+      best: { label: "최고" },
+      good: { label: "좋음" },
+      normal: { label: "보통" },
+      bad: { label: "별로" },
+      worst: { label: "최악" }
+    };
+
+    let movies = loadMovies();
+
+    const movieInput = document.getElementById("movieInput");
+    const addBtn = document.getElementById("addBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const toastEl = document.getElementById("toast");
+
+    function loadMovies() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return [];
+        const parsed = JSON.parse(saved);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter(item =>
+          item &&
+          typeof item.id === "string" &&
+          typeof item.title === "string" &&
+          typeof item.tier === "string" &&
+          tierInfo[item.tier]
+        );
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveMovies() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(movies));
+    }
+
+    function showToast(message) {
+      toastEl.textContent = message;
+      toastEl.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => {
+        toastEl.classList.remove("show");
+      }, 1800);
+    }
+
+    function createId() {
+      return "movie-" + Date

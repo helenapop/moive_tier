@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>🎬 나의 영화 티어리스트</title>
+    <style>
+        /* 전체 페이지 스타일: 어두운 배경(다크모드 느낌) */
+        body {
+            font-family: '맑은 고딕', sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* 제목 영역 */
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* 영화 추가 입력창 영역 */
+        .input-area {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .input-area input {
+            padding: 10px;
+            width: 300px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+        }
+
+        /* 공통 버튼 스타일: 둥근 모서리 + hover 효과 */
+        button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 3px;
+            transition: transform 0.1s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        /* 추가 버튼 색 */
+        .add-btn { background-color: #4CAF50; color: white; }
+        /* 복사 버튼 색 */
+        .copy-btn { background-color: #2196F3; color: white; }
+        /* 초기화 버튼 색 */
+        .reset-btn { background-color: #777; color: white; }
+
+        /* 상단 액션 버튼 영역 */
+        .actions {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* 각 등급 칸(티어) 스타일 */
+        .tier {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 60px;
+        }
+
+        /* 등급 이름 라벨 */
+        .tier-label {
+            width: 150px;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* 등급별 배경색 (기획서대로) */
+        .tier-best    { background-color: #e74c3c; } /* 최고 - 빨강 */
+        .tier-good    { background-color: #f1c40f; } /* 좋음 - 노랑 */
+        .tier-normal  { background-color: #27ae60; } /* 보통 - 초록 */
+        .tier-bad     { background-color: #3498db; } /* 별로 - 파랑 */
+        .tier-worst   { background-color: #7f8c8d; } /* 최악 - 회색 */
+
+        /* 영화들이 들어가는 공간 */
+        .movie-list {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* 영화 카드 하나하나 */
+        .movie {
+            background-color: #2c2c2c;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .movie:hover {
+            background-color: #444;
+        }
+
+        /* 삭제 버튼(x) */
+        .delete-btn {
+            background-color: #c0392b;
+            color: white;
+            padding: 2px 8px;
+            font-size: 12px;
+            border-radius: 50%;
+        }
+
+        /* 등급 선택 팝업(모달) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #2c2c2c;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .modal-content h3 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎬 나의 영화 티어리스트</h1>
+
+    <!-- 영화 추가 입력창 -->
+    <div class="input-area">
+        <input type="text" id="movieInput" placeholder="영화 제목을 입력하세요" />
+        <button class="add-btn" onclick="addMovie()">➕ 추가</button>
+    </div>
+
+    <!-- 상단 액션 버튼들 -->
+    <div class="actions">
+        <button class="copy-btn" onclick="copyResult()">📋 결과 복사</button>
+        <button class="reset-btn" onclick="resetAll()">🔄 전체 초기화</button>
+    </div>
+
+    <!-- 5개 등급 칸 -->
+    <div class="tier tier-best">
+        <div class="tier-label">최고 <span id="count-best">(0편)</span></div>
+        <div class="movie-list" id="list-best"></div>
+    </div>
+    <div class="tier tier-good">
+        <div class="tier-label">좋음 <span id="count-good">(0편)</span></div>
+        <div class="movie-list" id="list-good"></div>
+    </div>
+    <div class="tier tier-normal">
+        <div class="tier-label">보통 <span id="count-normal">(0편)</span></div>
+        <div class="movie-list" id="list-normal"></div>
+    </div>
+    <div class="tier tier-bad">
+        <div class="tier-label">별로 <span id="count-bad">(0편)</span></div>
+        <div class="movie-list" id="list-bad"></div>
+    </div>
+    <div class="tier tier-worst">
+        <div class="tier-label">최악 <span id="count-worst">(0편)</span></div>
+        <div class="movie-list" id="list-worst"></div>
+    </div>
+
+    <!-- 등급 미정 영화 목록 -->
+    <div class="tier" style="background-color:#333;">
+        <div class="tier-label">미분류 <span id="count-none">(0편)</span></div>
+        <div class="movie-list" id="list-none"></div>
+    </div>
+
+    <!-- 등급 선택 팝업 -->
+    <div class="modal" id="rankModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">등급을 선택하세요</h3>
+            <button style="background:#e74c3c;color:white;" onclick="setRank('best')">최고</button>
+            <button style="background:#f1c40f;color:black;" onclick="setRank('good')">좋음</button>
+            <button style="background:#27ae60;color:white;" onclick="setRank('normal')">보통</button>
+            <button style="background:#3498db;color:white;" onclick="setRank('bad')">별로</button>
+            <button style="background:#7f8c8d;color:white;" onclick="setRank('worst')">최악</button>
+            <br><br>
+            <button style="background:#555;color:white;" onclick="closeModal()">취소</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== 영화 데이터 저장 =====
+        // movies 배열에 {제목, 등급} 형태로 저장
+        let movies = JSON.parse(localStorage.getItem('movies')) || [];
+        let selectedIndex = null; // 현재 등급 선택 중인 영화 번호
+
+        // 영화 추가 함수
+        function addMovie() {
+            const input = document.getElementById('movieInput');
+            const title = input.value.trim();
+            if (title === '') {
+                alert('영화 제목을 입력해주세요!');
+                return;
+            }
+            movies.push({ title: title, rank: 'none' }); // 처음엔 미분류
+            input.value = '';
+            saveAndRender();
+        }
+
+        // 저장 + 화면 다시 그리기
+        function saveAndRender() {
+            localStorage.setItem('movies', JSON.stringify(movies));
+            render();
+        }
+
+        // 화면에 영화 목록 그리기
+        function render() {
+            // 등급별 목록 초기화
+            const ranks = ['best','good','normal','bad','worst','none'];
+            ranks.forEach(r => {
+                document.getElementById('list-' + r).innerHTML = '';
+            });
+
+            // 각 영화를 해당 등급 칸에 추가
+            movies.forEach((movie, index) => {
+                const div = document.createElement('div');
+                div.className = 'movie';
+                div.innerHTML = `
+                    <span onclick="openModal(${index})">${movie.title}</span>
+                    <button class="delete-btn" onclick="deleteMovie(${index})">✕</button>
+                `;
+                document.getElementById('list-' + movie.rank).appendChild(div);
+            });
+
+            // 등급별 개수 업데이트
+            ranks.forEach(r => {
+                const count = movies.filter(m => m.rank === r).length;
+                document.getElementById('count-' + r).textContent = `(${count}편)`;
+            });
+        }
+
+        // 등급 선택 팝업 열기
+        function openModal(index) {
+            selectedIndex = index;
+            document.getElementById('modalTitle').textContent = 
+                `"${movies[index].title}"의 등급을 선택하세요`;
+            document.getElementById('rankModal').style.display = 'flex';
+        }
+
+        // 팝업 닫기
+        function closeModal() {
+            document.getElementById('rankModal').style.display = 'none';
+            selectedIndex = null;
+        }
+
+        // 등급 설정
+        function setRank(rank) {
+            if (selectedIndex !== null) {
+                movies[selectedIndex].rank = rank;
+                saveAndRender();
+                closeModal();
+            }
+        }
+
+        // 영화 삭제
+        function deleteMovie(index) {
+            if (confirm(`"${movies[index].title}"을(를) 삭제할까요?`)) {
+                movies.splice(index, 1);
+                saveAndRender();
+            }
+        }
+
+        // 결과를 텍스트로 복사
+        function copyResult() {
+            const rankNames = {
+                best: '🟥 최고',
+                good: '🟨 좋음',
+                normal: '🟩 보통',
+                bad: '🟦 별로',
+                worst: '⬜ 최악'
+            };
+            let text = '🎬 나의 영화 티어리스트\n\n';
+            for (let r in rankNames) {
+                const list = movies.filter(m => m.rank === r).map(m => m.title);
+                text += `${rankNames[r]} (${list.length}편)\n`;
+                text += list.length > 0 ? list.join(', ') + '\n\n' : '(없음)\n\n';
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                alert('📋 복사 완료! 카톡 등에 붙여넣으세요.');
+            });
+        }
+
+        // 전체 초기화
+        function resetAll() {
+            if (confirm('정말 모든 영화를 삭제할까요?')) {
+                movies = [];
+                saveAndRender();
+            }
+        }
+
+        // 페이지 처음 열릴 때 화면 그리기
+        render();
+    </script>
+</body>
+</html>
